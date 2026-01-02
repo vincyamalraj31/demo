@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cute Penguin 3D Viewer - 360° Turntable</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 900px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        #canvas-container {
+            width: 100%;
+            height: 600px;
+            background: linear-gradient(to bottom, #e0e7ff 0%, #f0f4ff 100%);
+            border-radius: 15px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        .controls {
+            margin-top: 25px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .info-box {
+            margin-top: 25px;
+            padding: 20px;
+            background: #f8f9ff;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .info-box h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .info-box p {
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 8px;
+        }
+
+        .info-box code {
+            background: #e0e7ff;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            color: #764ba2;
+        }
+
+        .status {
+            text-align: center;
+            margin-top: 15px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .advanced-controls {
+            margin-top: 25px;
+            padding: 20px;
+            background: #f8f9ff;
+            border-radius: 10px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .control-group label {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .control-group input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 5px;
+            background: #d3d3d3;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .control-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .control-group input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .control-group select {
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 2px solid #e0e7ff;
+            background: white;
+            color: #333;
+            font-size: 14px;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+
+        .control-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .control-group span {
+            font-size: 13px;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .preset-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .preset-btn {
+            padding: 8px 16px;
+            font-size: 14px;
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+            box-shadow: none;
+        }
+
+        .preset-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .preset-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .model-info {
+            text-align: center;
+            margin-top: 10px;
+            padding: 10px;
+            background: #e0e7ff;
+            border-radius: 8px;
+            color: #333;
+            font-size: 13px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #667eea;
+            font-size: 18px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🐧 Cute Penguin 3D Viewer</h1>
+        <p class="subtitle">360° Turntable Animation - Professional Studio Quality</p>
+
+        <div id="canvas-container">
+            <div class="loading" id="loading">Loading 3D Model...</div>
+        </div>
+
+        <div class="controls">
+            <button id="toggleRotation">⏸️ Pause Rotation</button>
+            <button id="resetView">🔄 Reset View</button>
+            <button id="toggleWireframe">🔲 Toggle Wireframe</button>
+            <button id="screenshot">📸 Screenshot</button>
+            <button id="fullscreen">🖥️ Fullscreen</button>
+        </div>
+
+        <div class="advanced-controls">
+            <div class="control-group">
+                <label for="rotationSpeed">⚡ Rotation Speed:</label>
+                <input type="range" id="rotationSpeed" min="0" max="5" step="0.1" value="1">
+                <span id="speedValue">1.0x</span>
+            </div>
+
+            <div class="control-group">
+                <label for="lightIntensity">💡 Light Intensity:</label>
+                <input type="range" id="lightIntensity" min="0" max="3" step="0.1" value="1.2">
+                <span id="lightValue">1.2</span>
+            </div>
+
+            <div class="control-group">
+                <label for="zoom">🔍 Zoom:</label>
+                <input type="range" id="zoom" min="2" max="10" step="0.1" value="5">
+                <span id="zoomValue">5.0</span>
+            </div>
+
+            <div class="control-group">
+                <label for="bgColor">🎨 Background:</label>
+                <select id="bgColor">
+                    <option value="#e0e7ff">Light Blue</option>
+                    <option value="#ffffff">White</option>
+                    <option value="#1a1a2e">Dark</option>
+                    <option value="#ffeef8">Pink</option>
+                    <option value="#e8f5e9">Green</option>
+                    <option value="transparent">Transparent</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label>🎬 Animation Presets:</label>
+                <div class="preset-buttons">
+                    <button class="preset-btn" data-preset="slow">Slow</button>
+                    <button class="preset-btn" data-preset="normal">Normal</button>
+                    <button class="preset-btn" data-preset="fast">Fast</button>
+                    <button class="preset-btn" data-preset="bounce">Bounce</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="status" id="status">Auto-rotating at 30 FPS</div>
+        <div class="model-info" id="modelInfo">Model: Demo Penguin | Vertices: Loading...</div>
+
+        <div class="info-box">
+            <h3>📝 How to Use Your Own Penguin Model:</h3>
+            <p><strong>1.</strong> Generate your 3D penguin model using AI tools like <strong>Meshy.ai</strong>,
+                <strong>Tripo3D</strong>, or <strong>Luma AI</strong>
+            </p>
+            <p><strong>2.</strong> Download the model as a <code>.glb</code> or <code>.gltf</code> file</p>
+            <p><strong>3.</strong> Place the file in the same folder as this HTML file and name it
+                <code>penguin.glb</code>
+            </p>
+            <p><strong>4.</strong> Refresh this page - your penguin will appear!</p>
+            <p style="margin-top: 15px;"><em>Currently showing a demo 3D model. Replace with your penguin to see it in
+                    action!</em></p>
+        </div>
+    </div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        // Scene setup
+        const container = document.getElementById('canvas-container');
+        const loading = document.getElementById('loading');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xe0e7ff);
+
+        // Camera
+        const camera = new THREE.PerspectiveCamera(
+            45,
+            container.clientWidth / container.clientHeight,
+            0.1,
+            1000
+        );
+        camera.position.set(0, 1, 4);
+
+        // Renderer
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        container.appendChild(renderer.domElement);
+
+        // Professional Studio Lighting
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        scene.add(ambientLight);
+
+        const keyLight = new THREE.DirectionalLight(0xffffff, 1.2);
+        keyLight.position.set(5, 5, 5);
+        keyLight.castShadow = true;
+        keyLight.shadow.mapSize.width = 2048;
+        keyLight.shadow.mapSize.height = 2048;
+        scene.add(keyLight);
+
+        const fillLight = new THREE.DirectionalLight(0xffffff, 0.5);
+        fillLight.position.set(-5, 3, -5);
+        scene.add(fillLight);
+
+        const rimLight = new THREE.DirectionalLight(0xaabbff, 0.8);
+        rimLight.position.set(0, 5, -5);
+        scene.add(rimLight);
+
+        // Ground plane with shadow
+        const groundGeometry = new THREE.CircleGeometry(5, 32);
+        const groundMaterial = new THREE.ShadowMaterial({ opacity: 0.3 });
+        const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+        ground.rotation.x = -Math.PI / 2;
+        ground.receiveShadow = true;
+        scene.add(ground);
+
+        // Controls
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.minDistance = 2;
+        controls.maxDistance = 10;
+        controls.maxPolarAngle = Math.PI / 2;
+
+        // Model variables
+        let model = null;
+        let autoRotate = true;
+        let wireframeMode = false;
+        let rotationSpeed = 0.01;
+        let animationMode = 'normal';
+        let bounceDirection = 1;
+        let modelStats = { vertices: 0, triangles: 0 };
+
+        // Create a demo penguin-like shape (simple placeholder)
+        function createDemoPenguin() {
+            const penguinGroup = new THREE.Group();
+
+            // Body (main torso)
+            const bodyGeometry = new THREE.SphereGeometry(0.6, 32, 32);
+            bodyGeometry.scale(1, 1.2, 0.85);
+            const bodyMaterial = new THREE.MeshStandardMaterial({
+                color: 0x1a1a1a,
+                roughness: 0.3,
+                metalness: 0.1
+            });
+            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            body.position.y = 0.3;
+            body.castShadow = true;
+            penguinGroup.add(body);
+
+            // Belly (white front)
+            const bellyGeometry = new THREE.SphereGeometry(0.45, 32, 32);
+            bellyGeometry.scale(0.85, 1.15, 0.5);
+            const bellyMaterial = new THREE.MeshStandardMaterial({
+                color: 0xffffff,
+                roughness: 0.4
+            });
+            const belly = new THREE.Mesh(bellyGeometry, bellyMaterial);
+            belly.position.set(0, 0.3, 0.35);
+            belly.castShadow = true;
+            penguinGroup.add(belly);
+
+            // Head (larger and more visible)
+            const headGeometry = new THREE.SphereGeometry(0.4, 32, 32);
+            const head = new THREE.Mesh(headGeometry, bodyMaterial);
+            head.position.y = 1.05;
+            head.castShadow = true;
+            penguinGroup.add(head);
+
+            // White face patch
+            const faceGeometry = new THREE.SphereGeometry(0.25, 32, 32);
+            faceGeometry.scale(1.1, 1, 0.5);
+            const face = new THREE.Mesh(faceGeometry, bellyMaterial);
+            face.position.set(0, 1.05, 0.3);
+            penguinGroup.add(face);
+
+            // Eyes (larger and more expressive)
+            const eyeGeometry = new THREE.SphereGeometry(0.1, 16, 16);
+            const eyeMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff });
+            const pupilMaterial = new THREE.MeshStandardMaterial({ color: 0x000000 });
+
+            const leftEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+            leftEye.position.set(-0.15, 1.15, 0.35);
+            penguinGroup.add(leftEye);
+
+            const rightEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+            rightEye.position.set(0.15, 1.15, 0.35);
+            penguinGroup.add(rightEye);
+
+            const pupilGeometry = new THREE.SphereGeometry(0.05, 16, 16);
+            const leftPupil = new THREE.Mesh(pupilGeometry, pupilMaterial);
+            leftPupil.position.set(-0.15, 1.15, 0.43);
+            penguinGroup.add(leftPupil);
+
+            const rightPupil = new THREE.Mesh(pupilGeometry, pupilMaterial);
+            rightPupil.position.set(0.15, 1.15, 0.43);
+            penguinGroup.add(rightPupil);
+
+            // Beak (orange, more prominent)
+            const beakGeometry = new THREE.ConeGeometry(0.08, 0.25, 8);
+            const beakMaterial = new THREE.MeshStandardMaterial({ color: 0xff8800 });
+            const beak = new THREE.Mesh(beakGeometry, beakMaterial);
+            beak.rotation.x = Math.PI / 2;
+            beak.position.set(0, 1.05, 0.45);
+            penguinGroup.add(beak);
+
+            // Wings (flippers) - positioned better
+            const wingGeometry = new THREE.SphereGeometry(0.25, 16, 16);
+            wingGeometry.scale(0.35, 0.9, 0.25);
+
+            const leftWing = new THREE.Mesh(wingGeometry, bodyMaterial);
+            leftWing.position.set(-0.7, 0.3, 0);
+            leftWing.rotation.z = 0.4;
+            leftWing.castShadow = true;
+            penguinGroup.add(leftWing);
+
+            const rightWing = new THREE.Mesh(wingGeometry, bodyMaterial);
+            rightWing.position.set(0.7, 0.3, 0);
+            rightWing.rotation.z = -0.4;
+            rightWing.castShadow = true;
+            penguinGroup.add(rightWing);
+
+            // Feet (orange, webbed look)
+            const footGeometry = new THREE.SphereGeometry(0.18, 16, 16);
+            footGeometry.scale(1.4, 0.4, 1.2);
+            const footMaterial = new THREE.MeshStandardMaterial({ color: 0xff8800 });
+
+            const leftFoot = new THREE.Mesh(footGeometry, footMaterial);
+            leftFoot.position.set(-0.25, -0.45, 0.15);
+            leftFoot.castShadow = true;
+            penguinGroup.add(leftFoot);
+
+            const rightFoot = new THREE.Mesh(footGeometry, footMaterial);
+            rightFoot.position.set(0.25, -0.45, 0.15);
+            rightFoot.castShadow = true;
+            penguinGroup.add(rightFoot);
+
+            // Position the entire penguin group so it's centered and visible
+            penguinGroup.position.y = 0.5;
+            return penguinGroup;
+        }
+
+        // Try to load custom model, fallback to demo
+        const loader = new GLTFLoader();
+        loader.load(
+            'penguin.glb',
+            (gltf) => {
+                model = gltf.scene;
+                let vertices = 0, triangles = 0;
+                model.traverse((child) => {
+                    if (child.isMesh) {
+                        child.castShadow = true;
+                        child.receiveShadow = true;
+                        if (child.geometry) {
+                            vertices += child.geometry.attributes.position.count;
+                            triangles += child.geometry.index ? child.geometry.index.count / 3 : child.geometry.attributes.position.count / 3;
+                        }
+                    }
+                });
+                modelStats = { vertices, triangles: Math.floor(triangles) };
+                updateModelInfo();
+                scene.add(model);
+                loading.style.display = 'none';
+                document.getElementById('status').textContent = 'Custom penguin model loaded! Auto-rotating at 30 FPS';
+            },
+            undefined,
+            (error) => {
+                // Fallback to demo penguin
+                model = createDemoPenguin();
+                let vertices = 0, triangles = 0;
+                model.traverse((child) => {
+                    if (child.isMesh && child.geometry) {
+                        vertices += child.geometry.attributes.position.count;
+                        triangles += child.geometry.index ? child.geometry.index.count / 3 : child.geometry.attributes.position.count / 3;
+                    }
+                });
+                modelStats = { vertices, triangles: Math.floor(triangles) };
+                updateModelInfo();
+                scene.add(model);
+                loading.style.display = 'none';
+                document.getElementById('status').textContent = 'Demo penguin loaded. Add penguin.glb to see your custom model!';
+            }
+        );
+
+        // Update model info display
+        function updateModelInfo() {
+            document.getElementById('modelInfo').textContent =
+                `Model: ${modelStats.vertices > 10000 ? 'Custom' : 'Demo'} Penguin | Vertices: ${modelStats.vertices.toLocaleString()} | Triangles: ${modelStats.triangles.toLocaleString()}`;
+        }
+
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+
+            if (autoRotate && model) {
+                if (animationMode === 'bounce') {
+                    model.rotation.y += rotationSpeed * bounceDirection;
+                    if (Math.abs(model.rotation.y) > Math.PI / 4) {
+                        bounceDirection *= -1;
+                    }
+                } else {
+                    model.rotation.y += rotationSpeed;
+                }
+            }
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // Button controls
+        document.getElementById('toggleRotation').addEventListener('click', (e) => {
+            autoRotate = !autoRotate;
+            e.target.textContent = autoRotate ? '⏸️ Pause Rotation' : '▶️ Resume Rotation';
+            document.getElementById('status').textContent = autoRotate ?
+                'Auto-rotating at 30 FPS' : 'Rotation paused - drag to rotate manually';
+        });
+
+        document.getElementById('resetView').addEventListener('click', () => {
+            camera.position.set(0, 1, 4);
+            controls.reset();
+            if (model) {
+                model.rotation.y = 0;
+                animationMode = 'normal';
+                bounceDirection = 1;
+            }
+            document.querySelectorAll('.preset-btn').forEach(btn => btn.classList.remove('active'));
+        });
+
+        document.getElementById('toggleWireframe').addEventListener('click', (e) => {
+            wireframeMode = !wireframeMode;
+            if (model) {
+                model.traverse((child) => {
+                    if (child.isMesh) {
+                        child.material.wireframe = wireframeMode;
+                    }
+                });
+            }
+            e.target.textContent = wireframeMode ? '🔳 Solid View' : '🔲 Toggle Wireframe';
+        });
+
+        // Screenshot functionality
+        document.getElementById('screenshot').addEventListener('click', () => {
+            renderer.render(scene, camera);
+            const dataURL = renderer.domElement.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.download = `penguin-3d-${Date.now()}.png`;
+            link.href = dataURL;
+            link.click();
+            document.getElementById('status').textContent = 'Screenshot saved!';
+            setTimeout(() => {
+                document.getElementById('status').textContent = autoRotate ?
+                    'Auto-rotating at 30 FPS' : 'Rotation paused - drag to rotate manually';
+            }, 2000);
+        });
+
+        // Fullscreen functionality
+        document.getElementById('fullscreen').addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                container.requestFullscreen().catch(err => {
+                    console.log('Fullscreen error:', err);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        });
+
+        // Rotation speed control
+        document.getElementById('rotationSpeed').addEventListener('input', (e) => {
+            const speed = parseFloat(e.target.value);
+            rotationSpeed = 0.01 * speed;
+            document.getElementById('speedValue').textContent = speed.toFixed(1) + 'x';
+        });
+
+        // Light intensity control
+        document.getElementById('lightIntensity').addEventListener('input', (e) => {
+            const intensity = parseFloat(e.target.value);
+            keyLight.intensity = intensity;
+            document.getElementById('lightValue').textContent = intensity.toFixed(1);
+        });
+
+        // Zoom control
+        document.getElementById('zoom').addEventListener('input', (e) => {
+            const zoom = parseFloat(e.target.value);
+            camera.position.z = zoom;
+            document.getElementById('zoomValue').textContent = zoom.toFixed(1);
+        });
+
+        // Background color control
+        document.getElementById('bgColor').addEventListener('change', (e) => {
+            const color = e.target.value;
+            if (color === 'transparent') {
+                scene.background = null;
+                container.style.background = 'linear-gradient(to bottom, #e0e7ff 0%, #f0f4ff 100%)';
+            } else {
+                scene.background = new THREE.Color(color);
+                container.style.background = color;
+            }
+        });
+
+        // Animation presets
+        document.querySelectorAll('.preset-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+
+                const preset = e.target.dataset.preset;
+                animationMode = preset;
+
+                switch (preset) {
+                    case 'slow':
+                        rotationSpeed = 0.005;
+                        document.getElementById('rotationSpeed').value = 0.5;
+                        document.getElementById('speedValue').textContent = '0.5x';
+                        break;
+                    case 'normal':
+                        rotationSpeed = 0.01;
+                        document.getElementById('rotationSpeed').value = 1;
+                        document.getElementById('speedValue').textContent = '1.0x';
+                        break;
+                    case 'fast':
+                        rotationSpeed = 0.03;
+                        document.getElementById('rotationSpeed').value = 3;
+                        document.getElementById('speedValue').textContent = '3.0x';
+                        break;
+                    case 'bounce':
+                        rotationSpeed = 0.02;
+                        bounceDirection = 1;
+                        if (model) model.rotation.y = 0;
+                        break;
+                }
+
+                if (!autoRotate) {
+                    autoRotate = true;
+                    document.getElementById('toggleRotation').textContent = '⏸️ Pause Rotation';
+                    document.getElementById('status').textContent = 'Auto-rotating at 30 FPS';
+                }
+            });
+        });
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        });
+    </script>
+</body>
+
+</html>
